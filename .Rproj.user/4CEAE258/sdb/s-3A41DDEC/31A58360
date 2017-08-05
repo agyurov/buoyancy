@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "# draft\n# source(\"../Rfunctions/Rfunctions.R\")\n\nlibrary(ggplot2)\n\ndf = data.frame(v1 = runif(100, 0, 1),\n                v2 = runif(100, 0, 4))\n\n\n# params ------------------------------------------------------------------\n\ndimz = lapply(df, range)\n\n# init --------------------------------------------------------------------\n\ncm = list()\n\n\n\n# grid --------------------------------------------------------------------\na = list(c(0,1), c(0,4))\nrec.grid = function(a,x){\n  # a is list of ranges for each variable\n  out = seq(a[1], a[length(a)], len = 2^x + 1)\n  return(out)\n}\n\nin.interval = function(x, y){\n  # x data, y = interval\n  # return(cbind(x, findInterval(x, y)))\n  return(findInterval(x, y))\n}\n\n#  ------------------------------------------------------------------------\n\n\n\n\n# algorithm ---------------------------------------------------------------\n\n\na = list(c(0,1), c(0,4))\nplot(0, xlim = a[[1]], ylim = a[[2]], col = 'white')\n\ncond = T\ni = 0\nfake = gridz = list()\nnsteps = 4\n\nfor(i in 1:nsteps){\n  # i = i + 1\n  \n  # grid\n  a = lapply(a, rec.grid, x = i)\n  \n  # count\n  \n  \n  # plot\n  abline(v = a[[1]], lty = 2, col = 'grey')\n  abline(h = a[[2]], lty = 2, col = 'grey')\n  \n  for(j in 1:ncol(df)){\n    fake[[j]] = in.interval(df[,j], a[[j]])\n  }\n  gridz[[i]] = do.call(paste0, fake)\n  points(df$v1, df$v2, pch = 20, col = gridz[[i]])\n  # evaluate condition\n  \n  readline('fesfes')\n}\n\nlapply(gridz, table)\n\n",
+    "created" : 1501650277544.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3721864666",
+    "id" : "31A58360",
+    "lastKnownWriteTime" : 1501947694,
+    "last_content_update" : 1501947694762,
+    "path" : "C:/Users/Lenovo/Google Drive/Projects_personal/buoyancy/draft.R",
+    "project_path" : "draft.R",
+    "properties" : {
+        "docOutlineVisible" : "0",
+        "source_window_id" : "",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
