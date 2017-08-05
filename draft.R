@@ -6,13 +6,28 @@ library(deldir)
 df = data.frame(v1 = runif(100, 0, 2),
                 v2 = runif(100, 0, 3))
 
-df = iris[,1:4]
-resp = iris$Species
 
+# Working examples --------------------------------------------------------
 
+# df = iris[,1:3]
+# resp = iris$Species
 
+# df0 = as.data.frame(msleep)
+# df0 = na.omit(df0)
+# df = df0[,c(6:11)]
+# resp = do.call(cbind.data.frame, lapply(df0[,1:5], factor))
 
-# grid --------------------------------------------------------------------
+df = ToothGrowth[,c(1,3)]
+resp = ToothGrowth$supp
+
+nsteps = 2
+Ngroups = length(unique(resp))
+
+# functions ---------------------------------------------------------------
+
+my.dist = function(x,y){
+  return(sqrt(sum((x-y)^2)))
+}
 
 rec.grid = function(a,x){
   # a is list of ranges for each variable
@@ -26,11 +41,6 @@ in.interval = function(x, y){
   return(findInterval(x, y, rightmost.closed = T))
 }
 
-#  ------------------------------------------------------------------------
-
-
-
-
 # algorithm ---------------------------------------------------------------
 
 
@@ -38,7 +48,6 @@ a = lapply(df, range)
 cond = T
 i = 0
 results = result = cm = fake = gridz = list()
-nsteps = 2
 newdf = df
 
 for(i in 1:nsteps){
@@ -58,10 +67,10 @@ for(i in 1:nsteps){
   cm[[i]] = aggregate(.~grp, newdf, mean)
   
   # plot
-  plot(df[,1], df[,2], pch = 20, col = gridz[[i]])
-  abline(v = a[[1]], lty = 2, col = 'grey')
-  abline(h = a[[2]], lty = 2, col = 'grey')
-  points(cm[[i]][,2], cm[[i]][,3], pch = 4, lwd = 2, cex = 2)
+  # plot(df[,1], df[,2], pch = 20, col = gridz[[i]])
+  # abline(v = a[[1]], lty = 2, col = 'grey')
+  # abline(h = a[[2]], lty = 2, col = 'grey')
+  # points(cm[[i]][,2], cm[[i]][,3], pch = 4, lwd = 2, cex = 2)
   
   # evaluate condition
   
@@ -81,25 +90,28 @@ result = results[[nsteps]]
 
 # exploration -------------------------------------------------------------
 
-groups = result[result$Freq %in% sort(result$Freq, decreasing = T)[1:3],]
+groups = result[result$Freq %in% sort(result$Freq, decreasing = T)[1:Ngroups],]
 groups
-tr = aggregate(. ~ Species, iris, mean)
-tr
-
-
 
 # predict -----------------------------------------------------------------
 
-my.dist = function(x,y){
-  return(sqrt(sum((x-y)^2)))
+g = list()
+for(i in 1:Ngroups){
+  cat(paste0('Run ', i, ' of ', Ngroups, '\n'))
+  g[[i]] = apply(df, 1, my.dist, y = groups[i,4:(4+ncol(df)- 1)])
 }
+names(g) = paste0('g', 1:length(g))
 
-g1 = apply(df, 1, my.dist, y = groups[1,4:7])
-g2 = apply(df, 1, my.dist, y = groups[2,4:7])
-g3 = apply(df, 1, my.dist, y = groups[3,4:7])
-
-prd = cbind(g1, g2, g3)
+prd = do.call(cbind.data.frame, g)
 
 prdctn = apply(prd, 1, which.min)
 
-table(prdctn, resp)
+cat('\014')
+if(is.data.frame(resp)){
+  for(i in 1:ncol(resp)){
+    print(table(prdctn, resp[,i]))
+  }
+}
+if(!is.data.frame(resp)){
+  table(prdctn, resp)
+}
