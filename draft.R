@@ -8,23 +8,25 @@ df = data.frame(v1 = runif(100, 0, 2),
 
 
 # Working examples --------------------------------------------------------
-df0 =  read.csv('dkpol1.csv')
-df0$textlength = nchar(as.character(df0$text))
-resp = factor(df0$screen_name)
-df0 = df0[df0$screen_name %in% names(sort(c(table(resp)), decreasing = T)[1:8]),]
-resp = factor(df0$screen_name)
-df = df0[,sapply(df0, is.numeric)]
+
+# df0 =  read.csv('dkpol1.csv')
+# df0$textlength = nchar(as.character(df0$text))
+# resp = factor(df0$screen_name)
+# df0 = df0[df0$screen_name %in% names(sort(c(table(resp)), decreasing = T)[1:8]),]
+# resp = factor(df0$screen_name)
+# df = df0[,sapply(df0, is.numeric)]
 
 
-# df = iris[,1:3]
-# resp = iris$Species
+df = iris[,3:4]
+resp = iris$Species
 
 # df = ToothGrowth[,c(1,3)]
 # resp = ToothGrowth$supp
 
-ncubes = 2
+ncubes = 3
 Ngroups = length(unique(resp))
-plt = F
+plt = T
+convhul = T
 
 # functions ---------------------------------------------------------------
 
@@ -49,7 +51,7 @@ in.interval = function(x, y){
 
 a = lapply(df, range)
 cond = T
-i = 0
+i = 1
 results = result = cm = fake = gridz = list()
 newdf = df
 
@@ -68,13 +70,21 @@ for(i in 1:ncubes){
   newdf = cbind(df, do.call(paste0, fake))
   names(newdf)[ncol(newdf)] = 'grp'
   cm[[i]] = aggregate(.~grp, newdf, mean)
-  
+  chdata = split(newdf, newdf$grp) # convex hull data
   # plot
   if(plt == T){
-    plot(df[,1], df[,2], pch = 20, col = gridz[[i]])
-    abline(v = a[[1]], lty = 2, col = 'grey')
-    abline(h = a[[2]], lty = 2, col = 'grey')
+    plot(df[,1], df[,2], pch = 20, col = gridz[[i]], main = paste0('Grid ', 2^(i*2)),
+         panel.first = c(abline(v = a[[1]], lty = 2, col = 'grey'),
+                         abline(h = a[[2]], lty = 2, col = 'grey')))
+    
     points(cm[[i]][,2], cm[[i]][,3], pch = 4, lwd = 2, cex = 2)
+    if(convhul == T){
+      ch = lapply(chdata, function(x) chull(x[,1:2]))
+      ch = lapply(ch, function(x) ch = c(x, x[1]))
+      for(k in 1:length(chdata)){
+        lines(chdata[[k]][ch[[k]],1:2])
+      }
+    }
   }
   
 
@@ -123,3 +133,4 @@ tbl = rbind(tbl, colSums(tbl))
 tbl = cbind(tbl, rowSums(tbl))
 cat('\014')
 tbl
+
