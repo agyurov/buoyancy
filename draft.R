@@ -17,14 +17,14 @@ df = data.frame(v1 = runif(100, 0, 2),
 # df = df0[,sapply(df0, is.numeric)]
 
 
-df = iris[,3:4]
+df = iris[,2:3]
 resp = iris$Species
 
 # df = ToothGrowth[,c(1,3)]
 # resp = ToothGrowth$supp
 
-ncubes = 3
-Ngroups = length(unique(resp))
+ncubes = 4
+Ngroups = 2 #length(unique(resp))
 plt = T
 convhul = T
 
@@ -73,9 +73,9 @@ for(i in 1:ncubes){
   chdata = split(newdf, newdf$grp) # convex hull data
   # plot
   if(plt == T){
-    plot(df[,1], df[,2], pch = 20, col = gridz[[i]], main = paste0('Grid ', 2^(i*2)),
+    plot(df[,1], df[,2], pch = 20, col = resp, main = paste0('Grid ', 2^(i*2)),
          panel.first = c(abline(v = a[[1]], lty = 2, col = 'grey'),
-                         abline(h = a[[2]], lty = 2, col = 'grey')))
+                         abline(h = a[[2]], lty = 2, col = 'grey'))) #, col = gridz[[i]]
     
     points(cm[[i]][,2], cm[[i]][,3], pch = 4, lwd = 2, cex = 2)
     if(convhul == T){
@@ -97,7 +97,7 @@ finaldf = cbind(df, do.call(cbind.data.frame, gridz))
 
 
 for(i in 1:ncubes){
-  results[[i]] = cbind(mass[[i]], cm[[i]])
+  results[[i]] = cbind(mass = as.numeric(mass[[i]]), cm[[i]])
 }
 
 result = results[[ncubes]]
@@ -105,14 +105,14 @@ result = results[[ncubes]]
 
 # exploration -------------------------------------------------------------
 
-groups = result[result$Freq %in% sort(result$Freq, decreasing = T)[1:Ngroups],]
+groups = result[result$mass %in% sort(result$mass, decreasing = T)[1:Ngroups],]
 
 # predict -----------------------------------------------------------------
 
 g = list()
 for(i in 1:Ngroups){
   cat(paste0('Run ', i, ' of ', Ngroups, '\n'))
-  g[[i]] = apply(df, 1, my.dist, y = groups[i,4:(4+ncol(df)- 1)])
+  g[[i]] = apply(df, 1, my.dist, y = groups[i,3:(3+ncol(df)- 1)])
 }
 names(g) = paste0('g', 1:length(g))
 
@@ -134,3 +134,6 @@ tbl = cbind(tbl, rowSums(tbl))
 cat('\014')
 tbl
 
+
+x = kmeans(iris[,1:4], centers = 3)
+table(x$cluster, iris$Species)
