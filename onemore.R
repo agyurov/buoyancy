@@ -1,13 +1,27 @@
 # one more
 
 rm(list = ls())
-
+cat('\014')
 # functions ---------------------------------------------------------------
 
 mydist = function(x,y){
   return(sqrt(sum((x-y)^2)))
 }
 
+myprint = function(x,y){
+  print(paste0(x,  paste0(y, collapse = " ")))
+}
+
+overlap = function(x, r, df){
+  tmp = apply(df, 1, mydist, y = x)
+  # tmp = tmp < r & tmp != 0
+  tmp = tmp < r
+  return(tmp)
+}
+
+multiplyrows = function(x){
+  
+}
 
 # data --------------------------------------------------------------------
 
@@ -18,74 +32,68 @@ resp = iris$Species
 # df = OrchardSprays[,1:3]
 # resp = OrchardSprays$treatment
 
-# init --------------------------------------------------------------------
 
+
+# parameters --------------------------------------------------------------
+
+N = .3 * nrow(df) # number of spheres
+r = .05 # initial radius
+dr = 1.05 # delta radius
+nclusters = NULL
+maxrun = 200
 
 
 
 # count chain -------------------------------------------------------------
 
-scanned = sample(1:nrow(df), 1) # available indexes
-av = NULL
-x = df[scanned,]
-cond = T
-run = j = 0
-chain = rad = list()
-rad[[1]] = r = .01
+x = sample(1:nrow(df), 10, replace = F) # spheres
 
+
+
+run = 0
+cond = T
 while(cond){
   run = run + 1
+  cat('--------------------\n')
+  cat(paste0('Run: ', run, '\n'))
   
-  # calc distances
-  tmp = apply(df[-scanned,], 1, mydist, y = x) 
-  
-  # which pts are in range
-  tmp2 = tmp <= r
-  if(any(tmp2)){
-    # add those points to the list of available pts to start searching from
-    av = unique(c(av, which(tmp2)))
-    # pick a new pt from this list
-    newpt = sample(av, 1)
-    # add this new pt to the list of scanned pts to avoid duplicating
-    scanned = c(scanned, newpt)
-    # remove the scanned pts from the list of available pts
-    av = av[!av %in% scanned]
-    # choose new x 
-    x = df[newpt,]
+  # tmp = apply(df, 1, mydist, y = x)
+  sets = apply(df[x,], 1, overlap, r = r[length(r)], df = df[x,])
+  if(is.list(sets)){
+    names(sets) = paste0('pt', x)
+  }
+  if(is.matrix(sets)){
+    colnames(sets) = paste0('pt', x)
+    rownames(sets) = paste0('pt', x)
   }
 
-  # readline('lol')
+  # resulsts
+  r = c(r, r[length(r)] * dr)
+  nclusters = c(nclusters, qr(sets)$rank) # old
   
-  # exit if we have scanned everything
-  if(length(scanned) >= nrow(df)){
-    break
-  }
-  # increase radius if everything has been scanned
-  if(!any(tmp2)){
-    
-    r = 1.25*r
-    if(!is.null(av)){
-      
-      
-    }
-    j = j + 1
-    chain[[j]] = av
-    # names(chain)[j] = paste0("run", j)
-    rad[[j]] = r
-    # names(rad)[j] = paste0("run", j)
-  }
-
+  # rm(sets)
+  print(nclusters[length(nclusters)])
   
+  # condition
+  if(run > maxrun){
+    cat(paste0('Maximum iteration ', maxrun, ' reached.\n'))
+    cond = F
+  }
+  if(nclusters[length(nclusters)] == 1){
+    cat('Entire data set wrapped. One cluster.\n')
+    cond = F
+  }
+  
+  readline('next:')
 }
 
-
-
+r = r[-1]
 
 # explore -----------------------------------------------------------------
-cat('\014')
-resp[av]
-run
-length(av)
-length(scanned)
-r
-plot(unlist(rad), unlist(lapply(chain, length)), type = 'l')
+
+plot(r, nclusters, type = 'l')
+abline(h = 1:5, col = 'grey', lty = 2)
+text(x = mean(par('usr')[1:2]), y = nclusters[length(nclusters)],
+     labels = paste0('Final # clusters ', nclusters[length(nclusters)]), col = 2)
+nclusters[length(nclusters)]
+
