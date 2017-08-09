@@ -19,9 +19,37 @@ overlap = function(x, r, df){
   return(tmp)
 }
 
-multiplyrows = function(x){
-  
+orthog = function(y, x){
+  # x matrix, y vector
+  out = apply(x, 2, function(x, y) x %*% y, y = y)
+  return(out)
 }
+
+rec.count.mat = function(set = 1, mat){
+  olset = c(set, unlist(lapply(set, function(x,y) which(orthog(y[,x], y) != 0), y = mat)))
+  olset = unique(olset)
+  (what = olset %in% set)
+  if(all(what)){
+    # print.noquote(olset)
+    return(sort(olset, decreasing = F))
+  }
+  set = rec.count.mat(mat, set = olset)
+}
+
+clusters = function(x){
+  # x matrix of pts in range
+  b = list()
+  j = 0
+  for(i in 1:ncol(x)){
+    j = j + 1
+    b[[j]] = rec.count.mat(set = i, x)
+    b = unique(b)
+    b[unlist(lapply(b, is.null))] = NULL
+  }
+  names(b) = paste0('clstr', 1:length(b))
+  return(b)
+}
+
 
 # data --------------------------------------------------------------------
 
@@ -36,8 +64,8 @@ resp = iris$Species
 
 # parameters --------------------------------------------------------------
 
-N = .3 * nrow(df) # number of spheres
-r = .05 # initial radius
+N = .5 * nrow(df) # number of spheres
+r = .1 # initial radius
 dr = 1.05 # delta radius
 nclusters = NULL
 maxrun = 200
@@ -69,7 +97,7 @@ while(cond){
 
   # resulsts
   r = c(r, r[length(r)] * dr)
-  nclusters = c(nclusters, qr(sets)$rank) # old
+  nclusters = c(nclusters, length(clusters(sets))) # old
   
   # rm(sets)
   print(nclusters[length(nclusters)])
@@ -84,7 +112,7 @@ while(cond){
     cond = F
   }
   
-  readline('next:')
+  # readline('next:')
 }
 
 r = r[-1]
@@ -92,8 +120,8 @@ r = r[-1]
 # explore -----------------------------------------------------------------
 
 plot(r, nclusters, type = 'l')
-abline(h = 1:5, col = 'grey', lty = 2)
-text(x = mean(par('usr')[1:2]), y = nclusters[length(nclusters)],
-     labels = paste0('Final # clusters ', nclusters[length(nclusters)]), col = 2)
+abline(h = 1:N, col = 'grey', lty = 2)
+# text(x = mean(par('usr')[1:2]), y = nclusters[length(nclusters)],
+#      labels = paste0('Final # clusters ', nclusters[length(nclusters)]), col = 2)
 nclusters[length(nclusters)]
 
